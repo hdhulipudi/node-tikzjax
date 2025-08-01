@@ -92,7 +92,7 @@ export type TeXOptions = {
  * Run the TeX engine to compile TeX source code.
  *
  * @param input The TeX source code.
- * @returns The generated DVI file.
+ * @returns An object containing the generated DVI file and any errors from the TeX library.
  */
 export async function tex(input: string, options: TeXOptions = {}) {
   // Set up the tex input file.
@@ -128,6 +128,9 @@ export async function tex(input: string, options: TeXOptions = {}) {
 
   // Execute TeX and extract the generated DVI file.
   await library.executeAsync(wasm.instance.exports);
+  
+  // Get any console output (errors/warnings) from the library
+  const consoleOutput = library.getConsoleOutput ? library.getConsoleOutput() : '';
 
   try {
     const dvi = Buffer.from(library.readFileSync('input.dvi'));
@@ -135,10 +138,20 @@ export async function tex(input: string, options: TeXOptions = {}) {
     // Clean up the library for the next run.
     library.deleteEverything();
 
-    return dvi;
+    return {
+      dvi: dvi,
+      errors: consoleOutput,
+      success: true
+    };
   } catch (e) {
+    // Clean up the library for the next run.
     library.deleteEverything();
-    throw new Error('TeX engine render failed. Set `options.showConsole` to `true` to see logs.');
+    return {
+      dvi: null,
+      errors: consoleOutput || 'TeX engine render failed. Set `options.showConsole` to `true` to see logs.',
+      success: false,
+      exception: e instanceof Error ? e.message : String(e)
+    };
   }
 }
 

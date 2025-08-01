@@ -71,6 +71,7 @@ export function deleteEverything() {
 	wasmExports = null;
 	view = null;
 	sleeping = false;
+	consoleBuffer = "";
 }
 
 export function writeFileSync(filename, buffer)
@@ -182,17 +183,14 @@ function readSync(file, buffer, pointer, length, seek)
 }
 
 function writeToConsole(x) {
-	if (!showConsole) return;
+	// Always accumulate in consoleBuffer for error reporting
 	consoleBuffer += x;
-	if (consoleBuffer.indexOf("\n") >= 0) {
-		let lines = consoleBuffer.split("\n");
-		consoleBuffer = lines.pop();
-		for (let line of lines) {
-			// PATCHED:
-			// if (line.length) postMessage(line);
-			if (line.length) console.log(line);
-		}
-	}
+	
+	// Only print to console if showConsole is enabled
+	if (!showConsole) return;
+	
+	// Print individual characters to console for debugging
+	process.stdout.write(x);
 }
 
 export function setShowConsole() {
@@ -493,4 +491,12 @@ export function put(descriptor, pointer, length) {
 export function tex_final_end() {
 	if (consoleBuffer.length) writeToConsole("\n");
 	if (finished) finished.resolve();
+}
+
+/**
+ * Get the console output (errors/warnings) from the TeX library.
+ * @returns The console output as a string.
+ */
+export function getConsoleOutput() {
+	return consoleBuffer;
 }

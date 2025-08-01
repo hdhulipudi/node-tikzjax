@@ -10,8 +10,13 @@ export * from './dvi2svg';
 async function tex2svg(input: string, options?: TeXOptions & SvgOptions) {
   await load();
 
-  const dvi = await tex(input, options);
-  const svg = await dvi2svg(dvi, options);
+  const result = await tex(input, options);
+  
+  if (!result.success || !result.dvi) {
+    throw new Error(`TeX compilation failed: ${result.errors}`);
+  }
+  
+  const svg = await dvi2svg(result.dvi, options);
   return svg;
 }
 
