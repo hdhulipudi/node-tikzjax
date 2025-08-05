@@ -13,10 +13,10 @@ declare module 'tar-fs' {
 }
 
 // The cached unzipped data of file `core.dump.gz`.
-let coredump: Uint8Array;
+let coredump: Buffer;
 
 // The cached unzipped data of file `tex.wasm.gz`.
-let bytecode: Uint8Array;
+let bytecode: Buffer;
 
 // The memory filesystem that stores the TeX files extracted from `tex_files.tar.gz`.
 let memfs: IFs;
@@ -228,7 +228,7 @@ async function stream2buffer(stream: Readable): Promise<Buffer> {
     const buf: Buffer[] = [];
 
     stream.on('data', (chunk) => buf.push(chunk));
-    stream.on('end', () => resolve(Buffer.concat(buf)));
+    stream.on('end', () => resolve(Buffer.concat(buf as Buffer[])));
     stream.on('error', (err) => reject(err));
   });
 }
